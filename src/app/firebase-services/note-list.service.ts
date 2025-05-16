@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Firestore, collectionData, collection, doc, onSnapshot, CollectionReference } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { Note } from '../interfaces/note.interface';
+import { DocumentData, QuerySnapshot } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -11,31 +12,35 @@ export class NoteListService {
   trashNotes: Note[] = [];
   normalNotes: Note[] = [];
 
-  // unsubList;
+  unsubList;
   // unsubSingle;
-  items$;
+  // items$;
 
   firestore: Firestore = inject(Firestore);
 
   constructor() { 
-    console.log(111);
+    this.unsubList = onSnapshot(
+      this.getNormalNoteRef(),
+      (snapshot: QuerySnapshot<DocumentData>) => {
+        this.normalNotes = snapshot.docs.map(doc => ({
+          title: doc.id,
+        })) as Note[];
 
-    // itemCollection = collection(this.getNormalNoteRef());
-    // item$ = collectionData<Note>(itemCollection);
-    
-    // this.unsubList = onSnapshot(this.getNormalNoteRef)
-    this.items$ = collectionData(this.getNormalNoteRef());
-    console.log(this.items$);
+        console.log(this.normalNotes);
+      }
+    );
 
+  }
+
+  getNormalNoteRef() {
+    return collection(this.firestore, 'notes');
   }
 
   getTrashRef(){
     return collection(this.firestore, 'trash');
   }
 
-  getNormalNoteRef() {
-    return collection(this.firestore, 'notes');
-  }
+  
   
    getSingleDocRef(colId: string, docId: string) {
     return doc(collection(this.firestore, colId), docId);
